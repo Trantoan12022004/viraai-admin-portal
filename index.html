@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViraAI - Trung Tâm Quản Lý Bản Quyền</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <svg class="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            ViraAI <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium border border-amber-500/20">Admin Portal</span>
+          </h1>
+          <p class="text-xs text-slate-400">Hệ thống cấp phép & quản lý bản quyền Google Sheets</p>
+        </div>
+      </div>
+
+      <!-- Cấu hình API Modal Button -->
+      <div class="flex items-center gap-2">
+        <div id="statusIndicator" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-slate-800 border border-slate-700 text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Chưa kiểm tra kết nối</span>
+        </div>
+        <button onclick="openConfigModal()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Cấu hình API
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- STATS CARDS -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+        <span class="text-xs text-slate-400">Tổng số Key</span>
+        <div id="statTotal" class="text-2xl font-bold text-white mt-1">--</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+        <span class="text-xs text-emerald-400">Đang hoạt động (Active)</span>
+        <div id="statActive" class="text-2xl font-bold text-emerald-400 mt-1">--</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+        <span class="text-xs text-amber-400">Chưa kích hoạt (Unused)</span>
+        <div id="statUnused" class="text-2xl font-bold text-amber-400 mt-1">--</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+        <span class="text-xs text-rose-400">Hết hạn / Khóa</span>
+        <div id="statExpired" class="text-2xl font-bold text-rose-400 mt-1">--</div>
+      </div>
+    </div>
+
+    <!-- TẠO KEY MỚI -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+        <h2 class="text-base font-semibold text-white">Tạo Key Bản Quyền Mới</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div class="md:col-span-3">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Thời hạn bản quyền</label>
+          <select id="createDays" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-400 transition">
+            <option value="7">7 Ngày (Dùng thử)</option>
+            <option value="15">15 Ngày</option>
+            <option value="30" selected>30 Ngày (1 Tháng)</option>
+            <option value="60">60 Ngày (2 Tháng)</option>
+            <option value="90">90 Ngày (3 Tháng)</option>
+            <option value="180">180 Ngày (6 Tháng)</option>
+            <option value="365">365 Ngày (1 Năm)</option>
+            <option value="9999">Vĩnh viễn (Trọn đời)</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-6">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Tên khách hàng / Ghi chú</label>
+          <input id="createCustomer" type="text" placeholder="VD: Anh Nam - Gói VIP ViraAI" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+        </div>
+
+        <div class="md:col-span-3">
+          <button id="btnCreateKey" onclick="handleCreateKey()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Tạo Key Bản Quyền
+          </button>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="newKeyBox" class="hidden mt-5 p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
+        <div class="space-y-1">
+          <span class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Tạo key thành công! Hãy gửi mã này cho khách hàng:
+          </span>
+          <div id="newKeyDisplay" class="font-mono text-xl font-bold text-emerald-200 tracking-wider"></div>
+          <p id="newKeyCustomerInfo" class="text-xs text-slate-400"></p>
+        </div>
+        <button onclick="copyGeneratedKey()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs rounded-lg transition shadow flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Sao chép Key & Tin nhắn
+        </button>
+      </div>
+    </div>
+
+    <!-- DANH SÁCH BẢN QUYỀN TRÊN GOOGLE SHEETS -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div>
+          <h2 class="text-base font-semibold text-white">Danh Sách Bản Quyền Trong Google Sheets</h2>
+          <p class="text-xs text-slate-400">Dữ liệu được đọc trực tiếp từ bảng tính của bạn</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <input id="searchInput" oninput="filterKeys()" type="text" placeholder="Tìm key, khách, mã máy..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 w-56">
+
+          <select id="statusFilter" onchange="filterKeys()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="ACTIVE">Đang hoạt động (ACTIVE)</option>
+            <option value="UNUSED">Chưa kích hoạt (UNUSED)</option>
+            <option value="EXPIRED">Đã hết hạn (EXPIRED)</option>
+            <option value="BLOCKED">Đã khóa (BLOCKED)</option>
+          </select>
+
+          <button onclick="fetchKeysList()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+            <svg id="refreshIcon" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Làm mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+            <tr>
+              <th class="py-3 px-4">Mã Key</th>
+              <th class="py-3 px-4">Khách hàng</th>
+              <th class="py-3 px-4">Thời hạn</th>
+              <th class="py-3 px-4">Mã máy đã khóa</th>
+              <th class="py-3 px-4">Hạn sử dụng</th>
+              <th class="py-3 px-4">Trạng thái</th>
+              <th class="py-3 px-4 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="keysTableBody" class="divide-y divide-slate-800 bg-slate-900/40">
+            <tr>
+              <td colspan="7" class="py-8 text-center text-slate-500">
+                Đang tải dữ liệu từ Google Sheets...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL CẤU HÌNH API -->
+  <div id="configModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          Cấu Hình Kết Nối Google Sheets
+        </h3>
+        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-400">
+        Nhập URL Ứng dụng Web từ Google Apps Script và Mật khẩu Quản trị của bạn để kết nối với cơ sở dữ liệu.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">URL Google Apps Script (Web App URL)</label>
+          <input id="modalApiUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Mật khẩu Admin Secret</label>
+          <input id="modalAdminSecret" type="password" placeholder="VD: ViraAI@Admin2026" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400">
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="closeConfigModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white">Hủy</button>
+        <button onclick="saveConfigFromModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition">Lưu & Kết Nối</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let allKeys = [];
+    let currentCreatedKey = "";
+    let currentCreatedDays = 30;
+    let currentCreatedCustomer = "";
+
+    function getApiUrl() {
+      return localStorage.getItem('VIRAAI_API_URL') || '';
+    }
+
+    function getAdminSecret() {
+      return localStorage.getItem('VIRAAI_ADMIN_SECRET') || 'ViraAI@Admin2026';
+    }
+
+    function openConfigModal() {
+      document.getElementById('modalApiUrl').value = getApiUrl();
+      document.getElementById('modalAdminSecret').value = getAdminSecret();
+      document.getElementById('configModal').classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      document.getElementById('configModal').classList.add('hidden');
+    }
+
+    function saveConfigFromModal() {
+      const url = document.getElementById('modalApiUrl').value.trim();
+      const secret = document.getElementById('modalAdminSecret').value.trim();
+      if (!url) {
+        alert('Vui lòng nhập URL Google Apps Script!');
+        return;
+      }
+      localStorage.setItem('VIRAAI_API_URL', url);
+      localStorage.setItem('VIRAAI_ADMIN_SECRET', secret);
+      closeConfigModal();
+      fetchKeysList();
+    }
+
+    async function callApi(payload) {
+      const url = getApiUrl();
+      if (!url) {
+        openConfigModal();
+        throw new Error('Chưa cấu hình URL API Google Apps Script');
+      }
+
+      // Gửi dạng text/plain để tránh CORS preflight trên browser
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    async function fetchKeysList() {
+      const statusIndicator = document.getElementById('statusIndicator');
+      const tableBody = document.getElementById('keysTableBody');
+      const refreshIcon = document.getElementById('refreshIcon');
+
+      if (!getApiUrl()) {
+        statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="text-rose-400">Chưa cấu hình API URL</span>';
+        tableBody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-amber-400">Vui lòng bấm nút <b>Cấu hình API</b> ở góc trên để dán URL Google Apps Script.</td></tr>`;
+        return;
+      }
+
+      refreshIcon.classList.add('animate-spin');
+      statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span>Đang đồng bộ Sheets...</span>';
+
+      try {
+        const res = await callApi({
+          action: 'list_keys',
+          adminSecret: getAdminSecret()
+        });
+
+        if (res.success && Array.isArray(res.data)) {
+          allKeys = res.data;
+          statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-emerald-400">Đã kết nối Google Sheets</span>';
+          renderStats();
+          filterKeys();
+        } else {
+          statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="text-rose-400">Lỗi kết nối</span>';
+          tableBody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-rose-400">${res.message || 'Không thể tải danh sách'}</td></tr>`;
+        }
+      } catch (err) {
+        statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="text-rose-400">Lỗi mạng</span>';
+        tableBody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-rose-400">Lỗi gọi Google Apps Script: ${err.message}</td></tr>`;
+      } finally {
+        refreshIcon.classList.remove('animate-spin');
+      }
+    }
+
+    function renderStats() {
+      let total = allKeys.length;
+      let active = 0, unused = 0, expired = 0;
+      allKeys.forEach(k => {
+        if (k.status === 'ACTIVE') active++;
+        else if (k.status === 'UNUSED') unused++;
+        else expired++;
+      });
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statActive').innerText = active;
+      document.getElementById('statUnused').innerText = unused;
+      document.getElementById('statExpired').innerText = expired;
+    }
+
+    function filterKeys() {
+      const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const status = document.getElementById('statusFilter').value;
+
+      const filtered = allKeys.filter(item => {
+        const matchStatus = status === 'ALL' || item.status === status;
+        const matchQuery = !query ||
+          (item.key && item.key.toLowerCase().includes(query)) ||
+          (item.customer && item.customer.toLowerCase().includes(query)) ||
+          (item.machineId && item.machineId.toLowerCase().includes(query));
+        return matchStatus && matchQuery;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(items) {
+      const tableBody = document.getElementById('keysTableBody');
+      if (items.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">Không có key nào khớp với bộ lọc.</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = items.map(item => {
+        let badgeClass = 'bg-slate-800 text-slate-400 border-slate-700';
+        let statusText = item.status;
+        if (item.status === 'ACTIVE') {
+          badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+          statusText = 'Đang hoạt động';
+        } else if (item.status === 'UNUSED') {
+          badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+          statusText = 'Chưa kích hoạt';
+        } else if (item.status === 'EXPIRED') {
+          badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+          statusText = 'Hết hạn';
+        } else if (item.status === 'BLOCKED') {
+          badgeClass = 'bg-red-500/20 text-red-300 border-red-500/40';
+          statusText = 'Đã khóa';
+        }
+
+        const expDate = item.expiredAt ? new Date(item.expiredAt).toLocaleDateString('vi-VN') : '--';
+        const machine = item.machineId ? `<span class="font-mono text-[11px] text-slate-300">${item.machineId}</span>` : '<span class="text-slate-600 italic">Chưa gắn máy</span>';
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-3 px-4 font-mono font-semibold text-amber-300">
+              <div class="flex items-center gap-1.5">
+                <span>${item.key}</span>
+                <button onclick="copyText('${item.key}')" title="Sao chép" class="text-slate-500 hover:text-white">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-slate-200">${item.customer || '--'}</td>
+            <td class="py-3 px-4 text-slate-400">${item.days} ngày</td>
+            <td class="py-3 px-4">${machine}</td>
+            <td class="py-3 px-4 text-slate-400">${expDate}</td>
+            <td class="py-3 px-4">
+              <span class="inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-semibold ${badgeClass}">
+                ${statusText}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right space-x-1">
+              ${item.machineId ? `
+                <button onclick="resetMachine('${item.key}')" title="Xóa mã máy để khách đổi sang máy tính khác" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded text-[11px] transition">
+                  Reset máy
+                </button>
+              ` : ''}
+              <button onclick="extendKey('${item.key}', 30)" title="Gia hạn thêm 30 ngày" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded text-[11px] transition">
+                +30 ngày
+              </button>
+              <button onclick="toggleBlock('${item.key}')" title="Khóa hoặc mở khóa key" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 ${item.status === 'BLOCKED' ? 'text-emerald-400' : 'text-rose-400'} border border-slate-700 rounded text-[11px] transition">
+                ${item.status === 'BLOCKED' ? 'Mở' : 'Khóa'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function handleCreateKey() {
+      const days = document.getElementById('createDays').value;
+      const customer = document.getElementById('createCustomer').value.trim() || 'Khách hàng';
+      const btn = document.getElementById('btnCreateKey');
+
+      btn.disabled = true;
+      btn.innerHTML = 'Đang tạo key...';
+
+      try {
+        const res = await callApi({
+          action: 'create_key',
+          days: days,
+          customer: customer,
+          adminSecret: getAdminSecret()
+        });
+
+        if (res.success) {
+          currentCreatedKey = res.key;
+          currentCreatedDays = days;
+          currentCreatedCustomer = customer;
+
+          document.getElementById('newKeyDisplay').innerText = res.key;
+          document.getElementById('newKeyCustomerInfo').innerText = `Khách hàng: ${customer} • Thời hạn: ${days} ngày`;
+          document.getElementById('newKeyBox').classList.remove('hidden');
+
+          document.getElementById('createCustomer').value = '';
+          fetchKeysList();
+        } else {
+          alert('Lỗi tạo key: ' + res.message);
+        }
+      } catch (e) {
+        alert('Lỗi: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Tạo Key Bản Quyền
+        `;
+      }
+    }
+
+    function copyGeneratedKey() {
+      const msg = `Kính gửi ${currentCreatedCustomer},\nĐây là mã kích hoạt bản quyền ViraAI (${currentCreatedDays} ngày) của bạn:\n\n👉 KEY: ${currentCreatedKey}\n\nCách kích hoạt:\n1. Mở phần mềm ViraAI trên máy tính của bạn.\n2. Nhập mã key trên vào ô bản quyền và bấm "Kích hoạt".\n(Lưu ý: Mỗi mã key sẽ tự động khóa duy nhất cho 1 máy tính của bạn). Chúc bạn sử dụng hiệu quả!`;
+      copyText(msg, 'Đã sao chép tin nhắn kèm Key vào bộ nhớ tạm!');
+    }
+
+    async function resetMachine(key) {
+      if (!confirm(`Bạn có chắc muốn xóa mã máy của key ${key}?\nSau khi reset, khách hàng có thể kích hoạt trên máy tính mới.`)) return;
+      try {
+        const res = await callApi({ action: 'reset_machine', key: key, adminSecret: getAdminSecret() });
+        alert(res.message);
+        fetchKeysList();
+      } catch (e) { alert('Lỗi: ' + e.message); }
+    }
+
+    async function extendKey(key, addDays) {
+      if (!confirm(`Gia hạn thêm ${addDays} ngày cho key ${key}?`)) return;
+      try {
+        const res = await callApi({ action: 'extend_key', key: key, addDays: addDays, adminSecret: getAdminSecret() });
+        alert(res.message);
+        fetchKeysList();
+      } catch (e) { alert('Lỗi: ' + e.message); }
+    }
+
+    async function toggleBlock(key) {
+      if (!confirm(`Đổi trạng thái khóa/mở khóa cho key ${key}?`)) return;
+      try {
+        const res = await callApi({ action: 'toggle_block', key: key, adminSecret: getAdminSecret() });
+        alert(res.message);
+        fetchKeysList();
+      } catch (e) { alert('Lỗi: ' + e.message); }
+    }
+
+    function copyText(text, alertMsg) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(alertMsg || `Đã sao chép: ${text}`);
+      });
+    }
+
+    // Tự động tải khi mở trang
+    window.onload = () => {
+      if (getApiUrl()) {
+        fetchKeysList();
+      } else {
+        openConfigModal();
+      }
+    };
+  </script>
+</body>
+</html>
+
